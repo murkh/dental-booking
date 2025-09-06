@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Patient {
+  id          String   @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String   @unique
+  phone       String
+  dateOfBirth DateTime
+  sex         String
+  medicalInfo String?
+  isExisting  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  appointments Appointment[]
+
+  @@map("patients")
+}
+
+model Doctor {
+  id          String   @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String   @unique
+  phone       String
+  specialties String[]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  appointments Appointment[]
+  timeSlots    TimeSlot[]
+
+  @@map("doctors")
+}
+
+model AppointmentType {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  duration    Int      // Duration in minutes
+  price       Decimal?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  appointments Appointment[]
+
+  @@map("appointment_types")
+}
+
+model Appointment {
+  id              String          @id @default(cuid())
+  patientId       String
+  doctorId        String
+  appointmentTypeId String
+  scheduledAt     DateTime
+  status          AppointmentStatus @default(SCHEDULED)
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  patient         Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor          Doctor          @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  appointmentType AppointmentType @relation(fields: [appointmentTypeId], references: [id])
+
+  @@map("appointments")
+}
+
+model TimeSlot {
+  id        String   @id @default(cuid())
+  doctorId  String
+  date      DateTime
+  startTime String   // Format: "HH:mm"
+  endTime   String   // Format: "HH:mm"
+  isBooked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  doctor Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, date, startTime])
+  @@map("time_slots")
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}

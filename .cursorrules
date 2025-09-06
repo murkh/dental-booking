@@ -69,6 +69,11 @@ Before responding to any request, follow these steps:
 - Implement URL state management with 'nuqs'
 - Minimize client-side state
 
+**Error Handling and Loading States**
+
+- Implement error boundaries and error.tsx files for error handling.
+- Use loading.tsx files for managing loading states.
+
 ### Async Request APIs
 
 ```typescript

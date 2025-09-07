@@ -20,6 +20,7 @@ import {
 
 interface PersonalDetailsFormProps {
   onNext: (data: PersonalDetailsFormData) => void;
+  onBack: () => void;
   isSubmitting?: boolean;
 }
 
@@ -218,7 +219,10 @@ export function PersonalDetailsForm({
 
         {/* Medical Information */}
         <div>
-          <label htmlFor="medicalInfo" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="medicalInfo"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Medical considerations or additional information
           </label>
           <Textarea

@@ -92,8 +92,8 @@ export function TimeSlotSelection({
                   selectedSlotId === slot.id
                     ? "purple"
                     : !slot.isBooked
-                      ? "outline"
-                      : "grey"
+                    ? "outline"
+                    : "grey"
                 }
                 size="lg"
                 className="h-12"
@@ -134,7 +134,7 @@ export function TimeSlotSelection({
         <div className="flex justify-end">
           <Button
             onClick={handleNext}
-            disabled={!isValid || !selectedSlotId || isSubmitting}
+            disabled={!selectedSlotId || isSubmitting}
           >
             Next
           </Button>

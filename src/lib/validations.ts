@@ -4,7 +4,7 @@ export const appointmentDetailsSchema = z.object({
   isExisting: z.boolean(),
   appointmentType: z.string().min(1, "Please select an appointment type"),
   doctorId: z.string().min(1, "Please select a doctor"),
-  selectedDate: z.string().min(1, "Please select a date"), // Add selectedDate
+  selectedDate: z.date(),
 });
 
 export const personalDetailsSchema = z.object({

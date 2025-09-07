@@ -19,7 +19,7 @@ import { TimeSlotSelection } from "./time-slot-selection";
 
 interface AppointmentDetailsFormProps {
   onNext: (
-    data: AppointmentDetailsFormData & { slotId: string; selectedDate: Date },
+    data: AppointmentDetailsFormData & { slotId: string; selectedDate: Date }
   ) => void;
 }
 
@@ -178,7 +178,6 @@ export function AppointmentDetailsForm({
         {doctorId && (
           <TimeSlotSelection
             onNext={onSubmit}
-            onBack={() => {}}
             doctorId={doctorId}
             initialDate={new Date()}
             isValid={isValid}

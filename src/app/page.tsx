@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useEffect } from "react";
 import { AppointmentDetailsForm } from "@/components/appointment-details-form";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
@@ -24,7 +25,7 @@ export default function Home() {
   const [bookingError, setBookingError] = useState<string | null>(null);
 
   const handleAppointmentDetailsNext = (
-    data: AppointmentDetailsFormData & { slotId: string; selectedDate: Date },
+    data: AppointmentDetailsFormData & { slotId: string; selectedDate: Date }
   ) => {
     setAppointmentData({
       isExisting: data.isExisting,
@@ -38,8 +39,6 @@ export default function Home() {
 
   const handlePersonalDetailsNext = (data: PersonalDetailsFormData) => {
     setPersonalData(data);
-    // Now we can proceed to book the appointment
-    handleBooking();
   };
 
   const handleBooking = async () => {
@@ -67,7 +66,7 @@ export default function Home() {
           appointmentTypeId: appointmentData.appointmentType,
           slotId: selectedSlotId,
           notes: personalData.medicalInfo,
-          date: appointmentData.selectedDate.toISOString(), // Add selectedDate
+          date: appointmentData.selectedDate, // Add selectedDate
         },
       };
 
@@ -76,13 +75,27 @@ export default function Home() {
     } catch (error) {
       console.error("Booking error:", error);
       setBookingError(
-        error instanceof Error ? error.message : "Failed to book appointment",
+        error instanceof Error ? error.message : "Failed to book appointment"
       );
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Only trigger booking when all required data is set and currentStep is 2
+  useEffect(() => {
+    if (
+      currentStep === 2 &&
+      appointmentData &&
+      personalData &&
+      selectedSlotId &&
+      !isSubmitting &&
+      !bookingSuccess &&
+      !bookingError
+    ) {
+      handleBooking();
+    }
+  }, [appointmentData, personalData, selectedSlotId, currentStep]);
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);

@@ -58,22 +58,33 @@ CREATE TABLE "public"."appointments" (
     "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "slotId" TEXT NOT NULL,
 
     CONSTRAINT "appointments_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "public"."time_slots" (
+CREATE TABLE "public"."schedules" (
     "id" TEXT NOT NULL,
     "doctorId" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "schedules_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."slots" (
+    "id" TEXT NOT NULL,
+    "scheduleId" TEXT NOT NULL,
     "startTime" TEXT NOT NULL,
     "endTime" TEXT NOT NULL,
     "isBooked" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "time_slots_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "slots_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -86,7 +97,13 @@ CREATE UNIQUE INDEX "doctors_email_key" ON "public"."doctors"("email");
 CREATE UNIQUE INDEX "appointment_types_name_key" ON "public"."appointment_types"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "time_slots_doctorId_date_startTime_key" ON "public"."time_slots"("doctorId", "date", "startTime");
+CREATE UNIQUE INDEX "appointments_slotId_key" ON "public"."appointments"("slotId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "schedules_doctorId_date_key" ON "public"."schedules"("doctorId", "date");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "slots_scheduleId_startTime_key" ON "public"."slots"("scheduleId", "startTime");
 
 -- AddForeignKey
 ALTER TABLE "public"."appointments" ADD CONSTRAINT "appointments_patientId_fkey" FOREIGN KEY ("patientId") REFERENCES "public"."patients"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -98,4 +115,10 @@ ALTER TABLE "public"."appointments" ADD CONSTRAINT "appointments_doctorId_fkey" 
 ALTER TABLE "public"."appointments" ADD CONSTRAINT "appointments_appointmentTypeId_fkey" FOREIGN KEY ("appointmentTypeId") REFERENCES "public"."appointment_types"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."time_slots" ADD CONSTRAINT "time_slots_doctorId_fkey" FOREIGN KEY ("doctorId") REFERENCES "public"."doctors"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."appointments" ADD CONSTRAINT "appointments_slotId_fkey" FOREIGN KEY ("slotId") REFERENCES "public"."slots"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."schedules" ADD CONSTRAINT "schedules_doctorId_fkey" FOREIGN KEY ("doctorId") REFERENCES "public"."doctors"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."slots" ADD CONSTRAINT "slots_scheduleId_fkey" FOREIGN KEY ("scheduleId") REFERENCES "public"."schedules"("id") ON DELETE CASCADE ON UPDATE CASCADE;

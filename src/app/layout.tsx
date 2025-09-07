@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "The Dental Care Centre - Book Your Appointment",
-  description: "Book your dental appointment online with The Dental Care Centre. Professional dental care in New Cross, London.",
+  description:
+    "Book your dental appointment online with The Dental Care Centre. Professional dental care in New Cross, London.",
 };
 
 export default function RootLayout({

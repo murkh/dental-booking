@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
 import { AppointmentDetailsForm } from "@/components/appointment-details-form";
+import { Footer } from "@/components/footer";
+import { Header } from "@/components/header";
 import { PersonalDetailsForm } from "@/components/personal-details-form";
-import {
+import { createAppointment } from "@/hooks/use-api";
+import type {
   AppointmentDetailsFormData,
   PersonalDetailsFormData,
 } from "@/lib/validations";
-import { createAppointment } from "@/hooks/use-api";
 
 export default function Home() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -17,18 +17,18 @@ export default function Home() {
     useState<AppointmentDetailsFormData | null>(null);
   const [personalData, setPersonalData] =
     useState<PersonalDetailsFormData | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [selectedSlotId, setSelectedSlotId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
 
-  const handleAppointmentDetailsNext = (data: AppointmentDetailsFormData & { selectedTime: string }) => {
+  const handleAppointmentDetailsNext = (data: AppointmentDetailsFormData & { slotId: string }) => {
     setAppointmentData({
       isExisting: data.isExisting,
       appointmentType: data.appointmentType,
       doctorId: data.doctorId,
     });
-    setSelectedTime(data.selectedTime);
+    setSelectedSlotId(data.slotId);
     setCurrentStep(2);
   };
 
@@ -43,14 +43,9 @@ export default function Home() {
     setBookingError(null);
 
     try {
-      if (!appointmentData || !personalData || !selectedTime) {
-        throw new Error("Missing appointment, personal data, or selected time");
+      if (!appointmentData || !personalData || !selectedSlotId) {
+        throw new Error("Missing appointment, personal data, or selected slot");
       }
-
-      // Create the appointment date from selected time
-      const appointmentDate = new Date();
-      const [hours, minutes] = selectedTime.split(":");
-      appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
       const bookingData = {
         patient: {
@@ -66,7 +61,7 @@ export default function Home() {
         appointment: {
           doctorId: appointmentData.doctorId,
           appointmentTypeId: appointmentData.appointmentType,
-          scheduledAt: appointmentDate.toISOString(),
+          slotId: selectedSlotId,
           notes: personalData.medicalInfo,
         },
       };
@@ -100,6 +95,7 @@ export default function Home() {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
+              <title>Success</title>
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -116,11 +112,12 @@ export default function Home() {
             email shortly.
           </p>
           <button
+            type="button"
             onClick={() => {
               setCurrentStep(1);
               setAppointmentData(null);
               setPersonalData(null);
-              setSelectedTime("");
+              setSelectedSlotId("");
               setBookingSuccess(false);
               setBookingError(null);
             }}
@@ -142,6 +139,7 @@ export default function Home() {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
+              <title>Error</title>
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -155,9 +153,10 @@ export default function Home() {
           </h2>
           <p className="text-gray-600 mb-6">{bookingError}</p>
           <button
+            type="button"
             onClick={() => {
               setBookingError(null);
-              setCurrentStep(3);
+              setCurrentStep(1);
             }}
             className="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 transition-colors"
           >

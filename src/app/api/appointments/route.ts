@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { z } from 'zod'
+import { type NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
 
 const createAppointmentSchema = z.object({
   patient: z.object({
@@ -16,20 +16,20 @@ const createAppointmentSchema = z.object({
   appointment: z.object({
     doctorId: z.string(),
     appointmentTypeId: z.string(),
-    scheduledAt: z.string(),
+    slotId: z.string(),
     notes: z.string().optional(),
   }),
-})
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const validatedData = createAppointmentSchema.parse(body)
+    const body = await request.json();
+    const validatedData = createAppointmentSchema.parse(body);
 
     // Check if patient already exists
     let patient = await prisma.patient.findUnique({
-      where: { email: validatedData.patient.email }
-    })
+      where: { email: validatedData.patient.email },
+    });
 
     // Create patient if they don't exist
     if (!patient) {
@@ -43,9 +43,30 @@ export async function POST(request: NextRequest) {
           sex: validatedData.patient.sex,
           medicalInfo: validatedData.patient.medicalInfo,
           isExisting: validatedData.patient.isExisting,
-        }
-      })
+        },
+      });
     }
+
+    const slot = await prisma.slot.findUnique({
+      where: { id: validatedData.appointment.slotId },
+      include: { schedule: true },
+    });
+
+    if (!slot) {
+      return NextResponse.json({ error: "Invalid slot" }, { status: 400 });
+    }
+
+    if (slot.isBooked) {
+      return NextResponse.json(
+        { error: "Slot is already booked" },
+        { status: 400 },
+      );
+    }
+
+    const scheduledAt = new Date(slot.schedule.date);
+    const [hours, minutes] = slot.startTime.split(":").map(Number);
+    scheduledAt.setHours(hours);
+    scheduledAt.setMinutes(minutes);
 
     // Create appointment
     const appointment = await prisma.appointment.create({
@@ -53,70 +74,63 @@ export async function POST(request: NextRequest) {
         patientId: patient.id,
         doctorId: validatedData.appointment.doctorId,
         appointmentTypeId: validatedData.appointment.appointmentTypeId,
-        scheduledAt: new Date(validatedData.appointment.scheduledAt),
+        scheduledAt,
         notes: validatedData.appointment.notes,
-        status: 'SCHEDULED',
+        status: "SCHEDULED",
+        slotId: validatedData.appointment.slotId,
       },
       include: {
         patient: true,
         doctor: true,
         appointmentType: true,
-      }
-    })
+      },
+    });
 
     // Mark time slot as booked
-    const scheduledDate = new Date(validatedData.appointment.scheduledAt)
-    const timeString = scheduledDate.toTimeString().slice(0, 5) // HH:MM format
-
-    await prisma.timeSlot.updateMany({
+    await prisma.slot.update({
       where: {
-        doctorId: validatedData.appointment.doctorId,
-        date: {
-          gte: new Date(scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate()),
-          lt: new Date(scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate() + 1),
-        },
-        startTime: timeString,
+        id: validatedData.appointment.slotId,
       },
       data: {
         isBooked: true,
-      }
-    })
+      },
+    });
 
-    return NextResponse.json(appointment, { status: 201 })
+    return NextResponse.json(appointment, { status: 201 });
   } catch (error) {
-    console.error('Error creating appointment:', error)
-    
+    console.error("Error creating appointment:", error);
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid data', details: error.errors },
-        { status: 400 }
-      )
+        { error: "Invalid data", details: error.errors },
+        { status: 400 },
+      );
     }
 
     return NextResponse.json(
-      { error: 'Failed to create appointment' },
-      { status: 500 }
-    )
+      { error: "Failed to create appointment" },
+      { status: 500 },
+    );
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const patientEmail = searchParams.get('patientEmail')
+    const { searchParams } = new URL(request.url);
+    const patientEmail = searchParams.get("patientEmail");
 
     if (!patientEmail) {
       return NextResponse.json(
-        { error: 'Patient email is required' },
-        { status: 400 }
-      )
+        { error: "Patient email is required" },
+        { status: 400 },
+      );
     }
 
     const appointments = await prisma.appointment.findMany({
       where: {
         patient: {
-          email: patientEmail
-        }
+          email: patientEmail,
+        },
       },
       include: {
         patient: true,
@@ -124,16 +138,16 @@ export async function GET(request: NextRequest) {
         appointmentType: true,
       },
       orderBy: {
-        scheduledAt: 'desc'
-      }
-    })
+        scheduledAt: "desc",
+      },
+    });
 
-    return NextResponse.json(appointments)
+    return NextResponse.json(appointments);
   } catch (error) {
-    console.error('Error fetching appointments:', error)
+    console.error("Error fetching appointments:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch appointments' },
-      { status: 500 }
-    )
+      { error: "Failed to fetch appointments" },
+      { status: 500 },
+    );
   }
 }

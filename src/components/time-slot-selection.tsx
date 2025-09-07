@@ -6,27 +6,30 @@ import { formatTime } from "@/lib/utils";
 import { useTimeSlots } from "@/hooks/use-api";
 
 interface TimeSlotSelectionProps {
-  onNext: (selectedTime: string) => void;
-  onBack: () => void;
+  onNext: (selectedSlotId: string) => void;
   doctorId: string;
   selectedDate: Date;
   isSubmitting?: boolean;
+  isValid?: boolean;
 }
 
 export function TimeSlotSelection({
   onNext,
-  onBack,
   doctorId,
   selectedDate,
   isSubmitting = false,
+  isValid = false,
 }: TimeSlotSelectionProps) {
-  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [selectedSlotId, setSelectedSlotId] = useState<string>("");
   const { timeSlots, loading, error } = useTimeSlots(doctorId, selectedDate);
 
-  const handleTimeSelect = (time: string) => {
-    setSelectedTime(time);
-    if (time) {
-      onNext(time);
+  const handleTimeSelect = (slotId: string) => {
+    setSelectedSlotId(slotId);
+  };
+
+  const handleNext = () => {
+    if (selectedSlotId) {
+      onNext(selectedSlotId);
     }
   };
 
@@ -72,7 +75,7 @@ export function TimeSlotSelection({
               <Button
                 key={slot.id}
                 variant={
-                  selectedTime === slot.startTime
+                  selectedSlotId === slot.id
                     ? "purple"
                     : !slot.isBooked
                     ? "outline"
@@ -83,11 +86,11 @@ export function TimeSlotSelection({
                 onClick={() =>
                   !slot.isBooked &&
                   !isSubmitting &&
-                  handleTimeSelect(slot.startTime)
+                  handleTimeSelect(slot.id)
                 }
                 disabled={slot.isBooked || isSubmitting}
               >
-                {isSubmitting && selectedTime === slot.startTime ? (
+                {isSubmitting && selectedSlotId === slot.id ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     <span>Booking...</span>
@@ -114,6 +117,15 @@ export function TimeSlotSelection({
             <div className="w-4 h-4 bg-gray-300 rounded"></div>
             <span>Unavailable</span>
           </div>
+        </div>
+
+        <div className="flex justify-end">
+          <Button
+            onClick={handleNext}
+            disabled={!isValid || !selectedSlotId || isSubmitting}
+          >
+            Next
+          </Button>
         </div>
       </div>
     </div>

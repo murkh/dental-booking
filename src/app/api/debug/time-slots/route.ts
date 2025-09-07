@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     if (!doctorId) {
       return NextResponse.json(
         { error: "Doctor ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       select: {
         date: true,
       },
-      distinct: ['date'],
+      distinct: ["date"],
       orderBy: {
         date: "asc",
       },
@@ -49,14 +49,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       doctorId,
       totalCount,
-      uniqueDates: uniqueDates.map(d => d.date),
+      uniqueDates: uniqueDates.map((d) => d.date),
       sampleTimeSlots: allTimeSlots,
     });
   } catch (error) {
     console.error("Error in debug endpoint:", error);
     return NextResponse.json(
       { error: "Failed to fetch debug info" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

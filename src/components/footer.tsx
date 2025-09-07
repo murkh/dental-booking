@@ -1,4 +1,4 @@
-import { Phone, Mail, Globe, MapPin, Info } from "lucide-react"
+import { Globe, Info, Mail, MapPin, Phone } from "lucide-react";
 
 export function Footer() {
   return (
@@ -56,13 +56,13 @@ export function Footer() {
         </div>
 
         <div className="mt-4 flex justify-center space-x-6">
-          <a href="#" className="text-purple-600 hover:text-purple-700 text-sm">
+          <a href="/" className="text-purple-600 hover:text-purple-700 text-sm">
             Terms of Use
           </a>
-          <a href="#" className="text-purple-600 hover:text-purple-700 text-sm">
+          <a href="/" className="text-purple-600 hover:text-purple-700 text-sm">
             Privacy Policy
           </a>
-          <a href="#" className="text-purple-600 hover:text-purple-700 text-sm">
+          <a href="/" className="text-purple-600 hover:text-purple-700 text-sm">
             Cookies Policy
           </a>
         </div>

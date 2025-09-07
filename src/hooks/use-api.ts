@@ -123,24 +123,25 @@ const cleanupCache = () => {
 };
 
 export function useTimeSlots(doctorId: string, date: Date) {
-  const [allTimeSlots, setAllTimeSlots] = useState<TimeSlot[]>([]);
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    if (!doctorId) {
-      setAllTimeSlots([]);
+    if (!doctorId || !date) {
+      setTimeSlots([]);
       setLoading(false);
       setError(null);
       return;
     }
 
-    const cacheKey = `${doctorId}-all`;
+    const dateString = date.toISOString().split("T")[0];
+    const cacheKey = `${doctorId}-${dateString}`;
     cleanupCache();
     const cached = timeSlotsCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      setAllTimeSlots(cached.data);
+      setTimeSlots(cached.data);
       setLoading(false);
       setError(null);
       return;
@@ -155,19 +156,21 @@ export function useTimeSlots(doctorId: string, date: Date) {
         setLoading(true);
         setError(null);
         abortControllerRef.current = new AbortController();
-        // Fetch all slots for the doctor (no date param)
-        const response = await fetch(`/api/time-slots?doctorId=${doctorId}`, {
-          signal: abortControllerRef.current.signal,
-        });
+        const response = await fetch(
+          `/api/time-slots?doctorId=${doctorId}&date=${dateString}`,
+          {
+            signal: abortControllerRef.current.signal,
+          }
+        );
         if (!response.ok) {
           throw new Error("Failed to fetch time slots");
         }
         const data = await response.json();
         timeSlotsCache.set(cacheKey, {
-          data,
+          data: data.slots,
           timestamp: Date.now(),
         });
-        setAllTimeSlots(data);
+        setTimeSlots(data.slots);
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
           return;
@@ -175,7 +178,7 @@ export function useTimeSlots(doctorId: string, date: Date) {
         setError(err instanceof Error ? err.message : "An error occurred");
         // Fallback to mock data if API fails
         const mockSlots = generateMockTimeSlots();
-        setAllTimeSlots(mockSlots);
+        setTimeSlots(mockSlots);
       } finally {
         setLoading(false);
       }
@@ -186,19 +189,7 @@ export function useTimeSlots(doctorId: string, date: Date) {
         abortControllerRef.current.abort();
       }
     };
-  }, [doctorId]);
-
-  // Filter slots by selected date
-  const dateString = date.toISOString().split("T")[0];
-  const timeSlots = allTimeSlots.filter(slot => {
-    // slot.startTime is ISO string or 'HH:mm'? Assume ISO string for API
-    // If slot.startTime is '2025-09-07T09:00:00.000Z', filter by date part
-    if (slot.startTime.length > 5) {
-      return slot.startTime.startsWith(dateString);
-    }
-    // If only time, show all (fallback for mock data)
-    return true;
-  });
+  }, [doctorId, date]);
 
   return { timeSlots, loading, error };
 }
@@ -251,7 +242,7 @@ export async function createAppointment(appointmentData: {
   appointment: {
     doctorId: string;
     appointmentTypeId: string;
-    scheduledAt: string;
+    slotId: string;
     notes?: string;
   };
 }) {

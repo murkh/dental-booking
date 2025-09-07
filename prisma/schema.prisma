@@ -40,7 +40,7 @@ model Doctor {
   updatedAt   DateTime @updatedAt
 
   appointments Appointment[]
-  timeSlots    TimeSlot[]
+  schedules    Schedule[]
 
   @@map("doctors")
 }
@@ -49,7 +49,7 @@ model AppointmentType {
   id          String   @id @default(cuid())
   name        String   @unique
   description String?
-  duration    Int      // Duration in minutes
+  duration    Int // Duration in minutes
   price       Decimal?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -61,37 +61,53 @@ model AppointmentType {
 }
 
 model Appointment {
-  id              String          @id @default(cuid())
-  patientId       String
-  doctorId        String
+  id                String            @id @default(cuid())
+  patientId         String
+  doctorId          String
   appointmentTypeId String
-  scheduledAt     DateTime
-  status          AppointmentStatus @default(SCHEDULED)
-  notes           String?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  scheduledAt       DateTime
+  status            AppointmentStatus @default(SCHEDULED)
+  notes             String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  slotId            String            @unique
 
   patient         Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
   doctor          Doctor          @relation(fields: [doctorId], references: [id], onDelete: Cascade)
   appointmentType AppointmentType @relation(fields: [appointmentTypeId], references: [id])
+  slot            Slot            @relation(fields: [slotId], references: [id])
 
   @@map("appointments")
 }
 
-model TimeSlot {
+model Schedule {
   id        String   @id @default(cuid())
   doctorId  String
   date      DateTime
-  startTime String   // Format: "HH:mm"
-  endTime   String   // Format: "HH:mm"
-  isBooked  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   doctor Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  slots  Slot[]
 
-  @@unique([doctorId, date, startTime])
-  @@map("time_slots")
+  @@unique([doctorId, date])
+  @@map("schedules")
+}
+
+model Slot {
+  id         String   @id @default(cuid())
+  scheduleId String
+  startTime  String
+  endTime    String
+  isBooked   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  schedule    Schedule     @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  appointment Appointment?
+
+  @@unique([scheduleId, startTime])
+  @@map("slots")
 }
 
 enum AppointmentStatus {

@@ -1,8 +1,7 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState, useMemo } from "react";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -11,15 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAppointmentTypes, useDoctors } from "@/hooks/use-api";
 import {
   appointmentDetailsSchema,
   type AppointmentDetailsFormData,
 } from "@/lib/validations";
-import { useDoctors, useAppointmentTypes, useTimeSlots } from "@/hooks/use-api";
-import { formatTime } from "@/lib/utils";
+import { TimeSlotSelection } from "./time-slot-selection";
 
 interface AppointmentDetailsFormProps {
-  onNext: (data: AppointmentDetailsFormData & { selectedTime: string }) => void;
+  onNext: (data: AppointmentDetailsFormData & { slotId: string }) => void;
 }
 
 export function AppointmentDetailsForm({
@@ -29,7 +28,6 @@ export function AppointmentDetailsForm({
   const { appointmentTypes, loading: typesLoading } = useAppointmentTypes();
 
   const {
-    register,
     handleSubmit,
     setValue,
     watch,
@@ -42,49 +40,19 @@ export function AppointmentDetailsForm({
   const isExisting = watch("isExisting");
   const appointmentType = watch("appointmentType");
   const doctorId = watch("doctorId");
-  const [selectedTime, setSelectedTime] = useState<string>("");
 
-  // Memoize the date to prevent unnecessary API calls
-  const selectedDate = useMemo(() => new Date(), []);
-
-  // Only fetch time slots when doctor is selected and appointment type is chosen
-  const shouldFetchTimeSlots = doctorId && appointmentType;
-  const { timeSlots, loading: timeSlotsLoading } = useTimeSlots(
-    shouldFetchTimeSlots ? doctorId : "",
-    selectedDate
-  );
-
-  // Auto-progress when all fields are filled including time selection
-  useEffect(() => {
-    if (
-      isExisting !== undefined &&
-      appointmentType &&
-      doctorId &&
-      selectedTime
-    ) {
-      const timer = setTimeout(() => {
-        onNext({
-          isExisting: isExisting as boolean,
-          appointmentType,
-          doctorId,
-          selectedTime,
-        });
-      }, 500); // Small delay for better UX
-
-      return () => clearTimeout(timer);
-    }
-  }, [isExisting, appointmentType, doctorId, selectedTime, onNext]);
-
-  const onSubmit = (data: AppointmentDetailsFormData) => {
+  const onSubmit = (slotId: string) => {
     onNext({
-      ...data,
-      selectedTime,
+      isExisting: isExisting as boolean,
+      appointmentType: appointmentType as string,
+      doctorId: doctorId as string,
+      slotId,
     });
   };
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(() => {})}
       className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 p-4 lg:p-8"
     >
       <div className="space-y-8">
@@ -205,80 +173,15 @@ export function AppointmentDetailsForm({
 
         {/* Time Slot Selection */}
         {doctorId && (
-          <div>
-            <h3
-              className={`text-lg font-semibold mb-4 ${
-                doctorId ? "text-gray-900" : "text-gray-400"
-              }`}
-            >
-              Select Your Preferred Time
-            </h3>
-            {timeSlotsLoading ? (
-              <div className="flex justify-center py-8">
-                <div className="flex items-center space-x-2 text-gray-600">
-                  <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-sm">Loading available times...</span>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {timeSlots.map((slot) => (
-                  <Button
-                    key={slot.id}
-                    type="button"
-                    variant={
-                      selectedTime === slot.startTime
-                        ? "purple"
-                        : !slot.isBooked
-                        ? "outline"
-                        : "grey"
-                    }
-                    size="lg"
-                    className="h-12"
-                    onClick={() =>
-                      !slot.isBooked && setSelectedTime(slot.startTime)
-                    }
-                    disabled={slot.isBooked}
-                  >
-                    {formatTime(slot.startTime)}
-                  </Button>
-                ))}
-              </div>
-            )}
-
-            {/* Legend */}
-            <div className="flex items-center justify-center space-x-6 text-sm text-gray-600 mt-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border border-gray-300 rounded"></div>
-                <span>Available</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-purple-600 rounded"></div>
-                <span>Selected</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-gray-300 rounded"></div>
-                <span>Unavailable</span>
-              </div>
-            </div>
-          </div>
+          <TimeSlotSelection
+            onNext={onSubmit}
+            onBack={() => {}}
+            doctorId={doctorId}
+            selectedDate={new Date()}
+            isValid={isValid}
+          />
         )}
       </div>
-
-      {/* Auto-progress indicator */}
-      {isExisting !== undefined &&
-        appointmentType &&
-        doctorId &&
-        selectedTime && (
-          <div className="mt-8 flex justify-center">
-            <div className="flex items-center space-x-2 text-purple-600">
-              <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm font-medium">
-                Proceeding to personal details...
-              </span>
-            </div>
-          </div>
-        )}
     </form>
   );
 }

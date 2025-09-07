@@ -53,10 +53,11 @@ export function PersonalDetailsForm({ onNext, onBack, isSubmitting = false }: Pe
         {/* Name Fields */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
               First Name *
             </label>
             <Input
+              id="firstName"
               placeholder="Enter your first name"
               {...register('firstName')}
             />
@@ -65,10 +66,11 @@ export function PersonalDetailsForm({ onNext, onBack, isSubmitting = false }: Pe
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
               Last Name *
             </label>
             <Input
+              id="lastName"
               placeholder="Enter your last name"
               {...register('lastName')}
             />
@@ -80,10 +82,11 @@ export function PersonalDetailsForm({ onNext, onBack, isSubmitting = false }: Pe
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
             Email Address *
           </label>
           <Input
+            id="email"
             type="email"
             placeholder="Enter your email address"
             {...register('email')}
@@ -95,11 +98,11 @@ export function PersonalDetailsForm({ onNext, onBack, isSubmitting = false }: Pe
 
         {/* Sex */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="sex" className="block text-sm font-medium text-gray-700 mb-2">
             Sex *
           </label>
           <Select onValueChange={(value) => setValue('sex', value)}>
-            <SelectTrigger>
+            <SelectTrigger id="sex">
               <SelectValue placeholder="Choose your sex" />
             </SelectTrigger>
             <SelectContent>
@@ -116,10 +119,11 @@ export function PersonalDetailsForm({ onNext, onBack, isSubmitting = false }: Pe
 
         {/* Date of Birth */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-2">
             Date of Birth *
           </label>
           <Input
+            id="dateOfBirth"
             placeholder="DD/MM/YYYY"
             {...register('dateOfBirth')}
           />
@@ -130,7 +134,7 @@ export function PersonalDetailsForm({ onNext, onBack, isSubmitting = false }: Pe
 
         {/* Phone Number */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
             Phone Number *
           </label>
           <div className="flex space-x-2">
@@ -146,6 +150,7 @@ export function PersonalDetailsForm({ onNext, onBack, isSubmitting = false }: Pe
               </SelectContent>
             </Select>
             <Input
+              id="phone"
               placeholder="Enter your phone number"
               {...register('phone')}
               className="flex-1"

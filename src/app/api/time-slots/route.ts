@@ -1,30 +1,54 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const doctorId = searchParams.get("doctorId");
+    const date = searchParams.get("date");
 
-    if (!doctorId) {
+    if (!doctorId || !date) {
       return NextResponse.json(
-        { error: "Doctor ID is required" },
+        { error: "Doctor ID and date are required" },
         { status: 400 }
       );
     }
 
-    const allTimeSlots = await prisma.timeSlot.findMany({
-      where: { doctorId },
-      select: {
-        id: true,
-        date: true,
-        startTime: true,
-        endTime: true,
-        isBooked: true,
+    const date_form = new Date(date);
+    const currDate = new Date(
+      date_form.getFullYear(),
+      date_form.getMonth(),
+      date_form.getDate(),
+      0,
+      0,
+      0
+    );
+
+    console.log(currDate);
+
+    const schedule = await prisma.schedule.findFirst({
+      where: {
+        doctorId: doctorId,
+        date: currDate,
       },
     });
 
-    return NextResponse.json(allTimeSlots);
+    console.log(schedule);
+
+    if (!schedule) {
+      return NextResponse.json({ slots: [] });
+    }
+
+    const slots = await prisma.slot.findMany({
+      where: {
+        scheduleId: schedule.id,
+        isBooked: false,
+      },
+    });
+
+    console.log(slots);
+
+    return NextResponse.json({ slots });
   } catch (error) {
     console.error("Error fetching time slots:", error);
     return NextResponse.json(

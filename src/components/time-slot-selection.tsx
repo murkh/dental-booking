@@ -62,6 +62,10 @@ export function TimeSlotSelection({
               Failed to load time slots. Please try again.
             </p>
           </div>
+        ) : timeSlots.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <p className="text-sm">No available time slots for this date.</p>
+          </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {timeSlots.map((slot) => (

@@ -123,27 +123,24 @@ const cleanupCache = () => {
 };
 
 export function useTimeSlots(doctorId: string, date: Date) {
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [allTimeSlots, setAllTimeSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!doctorId) {
-      setTimeSlots([]);
+      setAllTimeSlots([]);
       setLoading(false);
       setError(null);
       return;
     }
 
-    const dateString = date.toISOString().split("T")[0];
-    const cacheKey = `${doctorId}-${dateString}`;
-
+    const cacheKey = `${doctorId}-all`;
     cleanupCache();
-
     const cached = timeSlotsCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      setTimeSlots(cached.data);
+      setAllTimeSlots(cached.data);
       setLoading(false);
       setError(null);
       return;
@@ -157,53 +154,51 @@ export function useTimeSlots(doctorId: string, date: Date) {
       try {
         setLoading(true);
         setError(null);
-
         abortControllerRef.current = new AbortController();
-
-        const response = await fetch(
-          `/api/time-slots?doctorId=${doctorId}&date=${dateString}`,
-          {
-            signal: abortControllerRef.current.signal,
-          }
-        );
-
+        // Fetch all slots for the doctor (no date param)
+        const response = await fetch(`/api/time-slots?doctorId=${doctorId}`, {
+          signal: abortControllerRef.current.signal,
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch time slots");
         }
-
-         const data = await response.json();
-
-         // Cache the result
+        const data = await response.json();
         timeSlotsCache.set(cacheKey, {
           data,
           timestamp: Date.now(),
         });
-
-        setTimeSlots(data);
+        setAllTimeSlots(data);
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
-          // Request was cancelled, don't update state
           return;
         }
-
         setError(err instanceof Error ? err.message : "An error occurred");
         // Fallback to mock data if API fails
         const mockSlots = generateMockTimeSlots();
-        setTimeSlots(mockSlots);
+        setAllTimeSlots(mockSlots);
       } finally {
         setLoading(false);
       }
     };
-
     fetchTimeSlots();
-
-    // Cleanup function
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
-  }, [doctorId, date.toISOString().split("T")[0]]); // Only depend on the date string, not the Date object
+  }, [doctorId]);
+
+  // Filter slots by selected date
+  const dateString = date.toISOString().split("T")[0];
+  const timeSlots = allTimeSlots.filter(slot => {
+    // slot.startTime is ISO string or 'HH:mm'? Assume ISO string for API
+    // If slot.startTime is '2025-09-07T09:00:00.000Z', filter by date part
+    if (slot.startTime.length > 5) {
+      return slot.startTime.startsWith(dateString);
+    }
+    // If only time, show all (fallback for mock data)
+    return true;
+  });
 
   return { timeSlots, loading, error };
 }

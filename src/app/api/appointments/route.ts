@@ -26,12 +26,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createAppointmentSchema.parse(body);
 
-    // Check if patient already exists
     let patient = await prisma.patient.findUnique({
       where: { email: validatedData.patient.email },
     });
 
-    // Create patient if they don't exist
     if (!patient) {
       patient = await prisma.patient.create({
         data: {
@@ -59,7 +57,7 @@ export async function POST(request: NextRequest) {
     if (slot.isBooked) {
       return NextResponse.json(
         { error: "Slot is already booked" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -103,13 +101,13 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid data", details: error.errors },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     return NextResponse.json(
       { error: "Failed to create appointment" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -118,20 +116,28 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const patientEmail = searchParams.get("patientEmail");
+    const doctorId = searchParams.get("doctorId");
 
-    if (!patientEmail) {
+    if (!patientEmail && !doctorId) {
       return NextResponse.json(
-        { error: "Patient email is required" },
-        { status: 400 },
+        { error: "Patient email or doctor id is required" },
+        { status: 400 }
       );
     }
 
-    const appointments = await prisma.appointment.findMany({
-      where: {
+    const query = {
+      ...(patientEmail && {
         patient: {
           email: patientEmail,
         },
-      },
+      }),
+      ...(doctorId && {
+        doctorId: doctorId,
+      }),
+    };
+
+    const appointments = await prisma.appointment.findMany({
+      where: query,
       include: {
         patient: true,
         doctor: true,
@@ -147,7 +153,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching appointments:", error);
     return NextResponse.json(
       { error: "Failed to fetch appointments" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

@@ -171,11 +171,9 @@ export function useTimeSlots(doctorId: string, date: Date) {
           throw new Error("Failed to fetch time slots");
         }
 
-        const data = await response.json();
+         const data = await response.json();
 
-        console.dir(data, { depth: null });
-
-        // Cache the result
+         // Cache the result
         timeSlotsCache.set(cacheKey, {
           data,
           timestamp: Date.now(),

@@ -16,15 +16,12 @@ export async function GET(request: NextRequest) {
 
     const date_form = new Date(date);
     const currDate = new Date(
-      date_form.getFullYear(),
-      date_form.getMonth(),
-      date_form.getDate(),
-      0,
-      0,
-      0
+      Date.UTC(
+        date_form.getUTCFullYear(),
+        date_form.getUTCMonth(),
+        date_form.getUTCDate()
+      )
     );
-
-    console.log(currDate);
 
     const schedule = await prisma.schedule.findFirst({
       where: {

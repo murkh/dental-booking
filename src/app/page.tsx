@@ -1,76 +1,195 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { AppointmentDetailsForm } from "@/components/appointment-details-form"
-import { PersonalDetailsForm } from "@/components/personal-details-form"
-import { TimeSlotSelection } from "@/components/time-slot-selection"
-import { AppointmentDetailsFormData, PersonalDetailsFormData } from "@/lib/validations"
+import { useState } from "react";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import { AppointmentDetailsForm } from "@/components/appointment-details-form";
+import { PersonalDetailsForm } from "@/components/personal-details-form";
+import {
+  AppointmentDetailsFormData,
+  PersonalDetailsFormData,
+} from "@/lib/validations";
+import { createAppointment } from "@/hooks/use-api";
 
 export default function Home() {
-  const [currentStep, setCurrentStep] = useState(1)
-  const [appointmentData, setAppointmentData] = useState<AppointmentDetailsFormData | null>(null)
-  const [personalData, setPersonalData] = useState<PersonalDetailsFormData | null>(null)
-  const [selectedTime, setSelectedTime] = useState<string>("")
+  const [currentStep, setCurrentStep] = useState(1);
+  const [appointmentData, setAppointmentData] =
+    useState<AppointmentDetailsFormData | null>(null);
+  const [personalData, setPersonalData] =
+    useState<PersonalDetailsFormData | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
-  const handleAppointmentDetailsNext = (data: AppointmentDetailsFormData) => {
-    setAppointmentData(data)
-    setCurrentStep(2)
-  }
+  const handleAppointmentDetailsNext = (data: AppointmentDetailsFormData & { selectedTime: string }) => {
+    setAppointmentData({
+      isExisting: data.isExisting,
+      appointmentType: data.appointmentType,
+      doctorId: data.doctorId,
+    });
+    setSelectedTime(data.selectedTime);
+    setCurrentStep(2);
+  };
 
   const handlePersonalDetailsNext = (data: PersonalDetailsFormData) => {
-    setPersonalData(data)
-    setCurrentStep(3)
-  }
+    setPersonalData(data);
+    // Now we can proceed to book the appointment
+    handleBooking();
+  };
 
-  const handleTimeSlotNext = (time: string) => {
-    setSelectedTime(time)
-    // Here you would typically submit the complete booking
-    console.log("Complete booking data:", {
-      appointmentData,
-      personalData,
-      selectedTime
-    })
-    // For now, we'll just show a success message
-    alert("Appointment booked successfully!")
-  }
+  const handleBooking = async () => {
+    setIsSubmitting(true);
+    setBookingError(null);
+
+    try {
+      if (!appointmentData || !personalData || !selectedTime) {
+        throw new Error("Missing appointment, personal data, or selected time");
+      }
+
+      // Create the appointment date from selected time
+      const appointmentDate = new Date();
+      const [hours, minutes] = selectedTime.split(":");
+      appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+      const bookingData = {
+        patient: {
+          firstName: personalData.firstName,
+          lastName: personalData.lastName,
+          email: personalData.email,
+          phone: personalData.phone,
+          dateOfBirth: personalData.dateOfBirth,
+          sex: personalData.sex,
+          medicalInfo: personalData.medicalInfo,
+          isExisting: appointmentData.isExisting,
+        },
+        appointment: {
+          doctorId: appointmentData.doctorId,
+          appointmentTypeId: appointmentData.appointmentType,
+          scheduledAt: appointmentDate.toISOString(),
+          notes: personalData.medicalInfo,
+        },
+      };
+
+      await createAppointment(bookingData);
+      setBookingSuccess(true);
+    } catch (error) {
+      console.error("Booking error:", error);
+      setBookingError(
+        error instanceof Error ? error.message : "Failed to book appointment"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep(currentStep - 1);
     }
-  }
+  };
 
   const renderCurrentStep = () => {
+    if (bookingSuccess) {
+      return (
+        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg
+              className="w-8 h-8 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Appointment Booked Successfully!
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Your appointment has been confirmed. You will receive a confirmation
+            email shortly.
+          </p>
+          <button
+            onClick={() => {
+              setCurrentStep(1);
+              setAppointmentData(null);
+              setPersonalData(null);
+              setSelectedTime("");
+              setBookingSuccess(false);
+              setBookingError(null);
+            }}
+            className="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 transition-colors"
+          >
+            Book Another Appointment
+          </button>
+        </div>
+      );
+    }
+
+    if (bookingError) {
+      return (
+        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm border border-red-200 p-8 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg
+              className="w-8 h-8 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Booking Failed
+          </h2>
+          <p className="text-gray-600 mb-6">{bookingError}</p>
+          <button
+            onClick={() => {
+              setBookingError(null);
+              setCurrentStep(3);
+            }}
+            className="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      );
+    }
+
     switch (currentStep) {
       case 1:
-        return <AppointmentDetailsForm onNext={handleAppointmentDetailsNext} />
+        return <AppointmentDetailsForm onNext={handleAppointmentDetailsNext} />;
       case 2:
-        return <PersonalDetailsForm onNext={handlePersonalDetailsNext} onBack={handleBack} />
-      case 3:
         return (
-          <TimeSlotSelection
-            onNext={handleTimeSlotNext}
+          <PersonalDetailsForm
+            onNext={handlePersonalDetailsNext}
             onBack={handleBack}
-            doctorId={appointmentData?.doctorId || ""}
-            selectedDate={new Date()}
+            isSubmitting={isSubmitting}
           />
-        )
+        );
       default:
-        return <AppointmentDetailsForm onNext={handleAppointmentDetailsNext} />
+        return <AppointmentDetailsForm onNext={handleAppointmentDetailsNext} />;
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header currentStep={currentStep} />
-      
-      <main className="py-12">
-        {renderCurrentStep()}
-      </main>
-      
+
+      <main className="py-12">{renderCurrentStep()}</main>
+
       <Footer />
     </div>
-  )
+  );
 }

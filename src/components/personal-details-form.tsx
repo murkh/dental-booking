@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -12,9 +13,10 @@ import { personalDetailsSchema, type PersonalDetailsFormData } from "@/lib/valid
 interface PersonalDetailsFormProps {
   onNext: (data: PersonalDetailsFormData) => void
   onBack: () => void
+  isSubmitting?: boolean
 }
 
-export function PersonalDetailsForm({ onNext, onBack }: PersonalDetailsFormProps) {
+export function PersonalDetailsForm({ onNext, onBack, isSubmitting = false }: PersonalDetailsFormProps) {
   const {
     register,
     handleSubmit,
@@ -25,6 +27,21 @@ export function PersonalDetailsForm({ onNext, onBack }: PersonalDetailsFormProps
     resolver: zodResolver(personalDetailsSchema),
     mode: 'onChange'
   })
+
+  const watchedFields = watch()
+  
+  // Auto-progress when all required fields are filled
+  useEffect(() => {
+    const { firstName, lastName, email, sex, dateOfBirth, phone, termsAccepted } = watchedFields
+    
+    if (firstName && lastName && email && sex && dateOfBirth && phone && termsAccepted) {
+      const timer = setTimeout(() => {
+        onNext(watchedFields as PersonalDetailsFormData)
+      }, 500) // Small delay for better UX
+
+      return () => clearTimeout(timer)
+    }
+  }, [watchedFields, onNext])
 
   const onSubmit = (data: PersonalDetailsFormData) => {
     onNext(data)
@@ -184,16 +201,18 @@ export function PersonalDetailsForm({ onNext, onBack }: PersonalDetailsFormProps
         </div>
       </div>
 
-      <div className="mt-8 flex justify-center">
-        <Button
-          type="submit"
-          variant="purple"
-          size="xl"
-          disabled={!isValid}
-        >
-          BOOK APPOINTMENT
-        </Button>
-      </div>
+      {/* Auto-progress indicator */}
+      {watchedFields.firstName && watchedFields.lastName && watchedFields.email && 
+       watchedFields.sex && watchedFields.dateOfBirth && watchedFields.phone && watchedFields.termsAccepted && (
+        <div className="mt-8 flex justify-center">
+          <div className="flex items-center space-x-2 text-purple-600">
+            <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm font-medium">
+              {isSubmitting ? "Booking your appointment..." : "Proceeding to book appointment..."}
+            </span>
+          </div>
+        </div>
+      )}
     </form>
   )
 }

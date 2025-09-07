@@ -36,8 +36,8 @@ export function Header({ currentStep }: HeaderProps) {
                 <span className={`text-xs lg:text-sm font-medium ${
                   currentStep >= 1 ? 'text-purple-600' : 'text-gray-500'
                 }`}>
-                  <span className="hidden sm:inline">Appointment Details</span>
-                  <span className="sm:hidden">Details</span>
+                  <span className="hidden sm:inline">Appointment & Time</span>
+                  <span className="sm:hidden">Appointment</span>
                 </span>
               </div>
               <div className="flex items-center space-x-2">

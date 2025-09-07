@@ -1,54 +1,34 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { formatTime } from "@/lib/utils"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { formatTime } from "@/lib/utils";
+import { useTimeSlots } from "@/hooks/use-api";
 
 interface TimeSlotSelectionProps {
-  onNext: (selectedTime: string) => void
-  onBack: () => void
-  doctorId: string
-  selectedDate: Date
+  onNext: (selectedTime: string) => void;
+  onBack: () => void;
+  doctorId: string;
+  selectedDate: Date;
+  isSubmitting?: boolean;
 }
 
-// Mock time slots - in a real app, these would come from the API
-const generateTimeSlots = (date: Date) => {
-  const slots = []
-  const startHour = 9
-  const endHour = 17
-  const interval = 40 // 40 minutes between appointments
-
-  for (let hour = startHour; hour < endHour; hour++) {
-    for (let minutes = 0; minutes < 60; minutes += interval) {
-      if (hour === endHour - 1 && minutes > 0) break // Don't go past 5 PM
-      
-      const timeString = `${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
-      const isAvailable = Math.random() > 0.3 // 70% chance of being available
-      
-      slots.push({
-        time: timeString,
-        isAvailable,
-        isBooked: !isAvailable
-      })
-    }
-  }
-
-  return slots
-}
-
-export function TimeSlotSelection({ onNext, onBack, doctorId, selectedDate }: TimeSlotSelectionProps) {
-  const [selectedTime, setSelectedTime] = useState<string>("")
-  const timeSlots = generateTimeSlots(selectedDate)
+export function TimeSlotSelection({
+  onNext,
+  onBack,
+  doctorId,
+  selectedDate,
+  isSubmitting = false,
+}: TimeSlotSelectionProps) {
+  const [selectedTime, setSelectedTime] = useState<string>("");
+  const { timeSlots, loading, error } = useTimeSlots(doctorId, selectedDate);
 
   const handleTimeSelect = (time: string) => {
-    setSelectedTime(time)
-  }
-
-  const handleSubmit = () => {
-    if (selectedTime) {
-      onNext(selectedTime)
+    setSelectedTime(time);
+    if (time) {
+      onNext(time);
     }
-  }
+  };
 
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 p-4 lg:p-8">
@@ -58,30 +38,63 @@ export function TimeSlotSelection({ onNext, onBack, doctorId, selectedDate }: Ti
             Select Your Preferred Time
           </h3>
           <p className="text-gray-600">
-            Available time slots for {selectedDate.toLocaleDateString('en-GB', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
+            Available time slots for{" "}
+            {selectedDate.toLocaleDateString("en-GB", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             })}
           </p>
         </div>
 
         {/* Time Slots Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {timeSlots.map((slot) => (
-            <Button
-              key={slot.time}
-              variant={selectedTime === slot.time ? "purple" : slot.isAvailable ? "outline" : "grey"}
-              size="lg"
-              className="h-12"
-              onClick={() => slot.isAvailable && handleTimeSelect(slot.time)}
-              disabled={!slot.isAvailable}
-            >
-              {formatTime(slot.time)}
-            </Button>
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <div className="flex items-center space-x-2 text-gray-600">
+              <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-sm">Loading available times...</span>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8 text-red-600">
+            <p className="text-sm">
+              Failed to load time slots. Please try again.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {timeSlots.map((slot) => (
+              <Button
+                key={slot.id}
+                variant={
+                  selectedTime === slot.startTime
+                    ? "purple"
+                    : !slot.isBooked
+                    ? "outline"
+                    : "grey"
+                }
+                size="lg"
+                className="h-12"
+                onClick={() =>
+                  !slot.isBooked &&
+                  !isSubmitting &&
+                  handleTimeSelect(slot.startTime)
+                }
+                disabled={slot.isBooked || isSubmitting}
+              >
+                {isSubmitting && selectedTime === slot.startTime ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Booking...</span>
+                  </div>
+                ) : (
+                  formatTime(slot.startTime)
+                )}
+              </Button>
+            ))}
+          </div>
+        )}
 
         {/* Legend */}
         <div className="flex items-center justify-center space-x-6 text-sm text-gray-600">
@@ -99,17 +112,6 @@ export function TimeSlotSelection({ onNext, onBack, doctorId, selectedDate }: Ti
           </div>
         </div>
       </div>
-
-      <div className="mt-8 flex justify-center">
-        <Button
-          variant="purple"
-          size="xl"
-          onClick={handleSubmit}
-          disabled={!selectedTime}
-        >
-          NEXT: PERSONAL DETAILS
-        </Button>
-      </div>
     </div>
-  )
+  );
 }

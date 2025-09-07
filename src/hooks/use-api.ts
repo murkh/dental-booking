@@ -79,7 +79,7 @@ export function useDoctors() {
 
 export function useAppointmentTypes() {
   const [appointmentTypes, setAppointmentTypes] = useState<AppointmentType[]>(
-    []
+    [],
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -160,7 +160,7 @@ export function useTimeSlots(doctorId: string, date: Date) {
           `/api/time-slots?doctorId=${doctorId}&date=${dateString}`,
           {
             signal: abortControllerRef.current.signal,
-          }
+          },
         );
         if (!response.ok) {
           throw new Error("Failed to fetch time slots");
@@ -228,39 +228,19 @@ function generateMockTimeSlots(): TimeSlot[] {
   return slots;
 }
 
-export async function createAppointment(appointmentData: {
-  patient: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    dateOfBirth: string;
-    sex: string;
-    medicalInfo?: string;
-    isExisting: boolean;
-  };
-  appointment: {
-    doctorId: string;
-    appointmentTypeId: string;
-    slotId: string;
-    notes?: string;
-  };
-}) {
-  try {
-    const response = await fetch("/api/appointments", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(appointmentData),
-    });
+export async function createAppointment(data: any) {
+  const response = await fetch("/api/appointments", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
 
-    if (!response.ok) {
-      throw new Error("Failed to create appointment");
-    }
-
-    return await response.json();
-  } catch (error) {
-    throw error;
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to book appointment");
   }
+
+  return await response.json();
 }

@@ -13,8 +13,9 @@ import type {
 
 export default function Home() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [appointmentData, setAppointmentData] =
-    useState<AppointmentDetailsFormData | null>(null);
+  const [appointmentData, setAppointmentData] = useState<
+    (AppointmentDetailsFormData & { selectedDate: Date }) | null
+  >(null);
   const [personalData, setPersonalData] =
     useState<PersonalDetailsFormData | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState<string>("");
@@ -22,11 +23,14 @@ export default function Home() {
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
 
-  const handleAppointmentDetailsNext = (data: AppointmentDetailsFormData & { slotId: string }) => {
+  const handleAppointmentDetailsNext = (
+    data: AppointmentDetailsFormData & { slotId: string; selectedDate: Date },
+  ) => {
     setAppointmentData({
       isExisting: data.isExisting,
       appointmentType: data.appointmentType,
       doctorId: data.doctorId,
+      selectedDate: data.selectedDate, // Store selectedDate
     });
     setSelectedSlotId(data.slotId);
     setCurrentStep(2);
@@ -63,6 +67,7 @@ export default function Home() {
           appointmentTypeId: appointmentData.appointmentType,
           slotId: selectedSlotId,
           notes: personalData.medicalInfo,
+          date: appointmentData.selectedDate.toISOString(), // Add selectedDate
         },
       };
 
@@ -71,7 +76,7 @@ export default function Home() {
     } catch (error) {
       console.error("Booking error:", error);
       setBookingError(
-        error instanceof Error ? error.message : "Failed to book appointment"
+        error instanceof Error ? error.message : "Failed to book appointment",
       );
     } finally {
       setIsSubmitting(false);

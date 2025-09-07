@@ -1,8 +1,8 @@
-import { Button } from "@/components/ui/button"
-import { Phone } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Phone } from "lucide-react";
 
 interface HeaderProps {
-  currentStep: number
+  currentStep: number;
 }
 
 export function Header({ currentStep }: HeaderProps) {
@@ -28,27 +28,39 @@ export function Header({ currentStep }: HeaderProps) {
             </h2>
             <div className="flex items-center justify-center space-x-4 lg:space-x-8 mt-2">
               <div className="flex items-center space-x-2">
-                <div className={`w-6 h-6 lg:w-8 lg:h-8 rounded-full flex items-center justify-center text-xs lg:text-sm font-semibold ${
-                  currentStep >= 1 ? 'bg-purple-600 text-white' : 'bg-gray-300 text-gray-600'
-                }`}>
+                <div
+                  className={`w-6 h-6 lg:w-8 lg:h-8 rounded-full flex items-center justify-center text-xs lg:text-sm font-semibold ${
+                    currentStep >= 1
+                      ? "bg-purple-600 text-white"
+                      : "bg-gray-300 text-gray-600"
+                  }`}
+                >
                   1
                 </div>
-                <span className={`text-xs lg:text-sm font-medium ${
-                  currentStep >= 1 ? 'text-purple-600' : 'text-gray-500'
-                }`}>
+                <span
+                  className={`text-xs lg:text-sm font-medium ${
+                    currentStep >= 1 ? "text-purple-600" : "text-gray-500"
+                  }`}
+                >
                   <span className="hidden sm:inline">Appointment & Time</span>
                   <span className="sm:hidden">Appointment</span>
                 </span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className={`w-6 h-6 lg:w-8 lg:h-8 rounded-full flex items-center justify-center text-xs lg:text-sm font-semibold ${
-                  currentStep >= 2 ? 'bg-purple-600 text-white' : 'bg-gray-300 text-gray-600'
-                }`}>
+                <div
+                  className={`w-6 h-6 lg:w-8 lg:h-8 rounded-full flex items-center justify-center text-xs lg:text-sm font-semibold ${
+                    currentStep >= 2
+                      ? "bg-purple-600 text-white"
+                      : "bg-gray-300 text-gray-600"
+                  }`}
+                >
                   2
                 </div>
-                <span className={`text-xs lg:text-sm font-medium ${
-                  currentStep >= 2 ? 'text-purple-600' : 'text-gray-500'
-                }`}>
+                <span
+                  className={`text-xs lg:text-sm font-medium ${
+                    currentStep >= 2 ? "text-purple-600" : "text-gray-500"
+                  }`}
+                >
                   <span className="hidden sm:inline">Personal Details</span>
                   <span className="sm:hidden">Personal</span>
                 </span>
@@ -58,11 +70,17 @@ export function Header({ currentStep }: HeaderProps) {
 
           {/* Contact Buttons */}
           <div className="flex items-center space-x-2 lg:space-x-3">
-            <Button variant="outline" className="border-gray-300 text-gray-700 text-xs lg:text-sm">
+            <Button
+              variant="outline"
+              className="border-gray-300 text-gray-700 text-xs lg:text-sm"
+            >
               <span className="hidden sm:inline">ABOUT US</span>
               <span className="sm:hidden">ABOUT</span>
             </Button>
-            <Button variant="purple" className="flex items-center space-x-2 text-xs lg:text-sm">
+            <Button
+              variant="purple"
+              className="flex items-center space-x-2 text-xs lg:text-sm"
+            >
               <Phone className="w-3 h-3 lg:w-4 lg:h-4" />
               <span className="hidden sm:inline">0207 639 3323</span>
               <span className="sm:hidden">0207 639 3323</span>
@@ -71,5 +89,5 @@ export function Header({ currentStep }: HeaderProps) {
         </div>
       </div>
     </header>
-  )
+  );
 }

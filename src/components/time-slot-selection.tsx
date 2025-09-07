@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input"; // Added Input import
 import { formatTime } from "@/lib/utils";
 import { useTimeSlots } from "@/hooks/use-api";
 
 interface TimeSlotSelectionProps {
-  onNext: (selectedSlotId: string) => void;
+  onNext: (selectedSlotId: string, selectedDate: Date) => void;
   doctorId: string;
-  selectedDate: Date;
+  initialDate: Date; // Renamed from selectedDate to initialDate
   isSubmitting?: boolean;
   isValid?: boolean;
 }
@@ -16,20 +17,25 @@ interface TimeSlotSelectionProps {
 export function TimeSlotSelection({
   onNext,
   doctorId,
-  selectedDate,
+  initialDate, // Renamed from selectedDate to initialDate
   isSubmitting = false,
   isValid = false,
 }: TimeSlotSelectionProps) {
   const [selectedSlotId, setSelectedSlotId] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<Date>(initialDate); // New state for selectedDate
   const { timeSlots, loading, error } = useTimeSlots(doctorId, selectedDate);
 
   const handleTimeSelect = (slotId: string) => {
     setSelectedSlotId(slotId);
   };
 
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedDate(new Date(e.target.value));
+  };
+
   const handleNext = () => {
     if (selectedSlotId) {
-      onNext(selectedSlotId);
+      onNext(selectedSlotId, selectedDate); // Pass selectedDate to onNext
     }
   };
 
@@ -38,8 +44,16 @@ export function TimeSlotSelection({
       <div className="space-y-6">
         <div className="text-center">
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Select Your Preferred Time
+            Select Your Preferred Date and Time
           </h3>
+          <div className="mb-4">
+            <Input
+              type="date"
+              value={selectedDate.toISOString().split("T")[0]}
+              onChange={handleDateChange}
+              className="w-full max-w-xs mx-auto"
+            />
+          </div>
           <p className="text-gray-600">
             Available time slots for{" "}
             {selectedDate.toLocaleDateString("en-GB", {
@@ -78,15 +92,13 @@ export function TimeSlotSelection({
                   selectedSlotId === slot.id
                     ? "purple"
                     : !slot.isBooked
-                    ? "outline"
-                    : "grey"
+                      ? "outline"
+                      : "grey"
                 }
                 size="lg"
                 className="h-12"
                 onClick={() =>
-                  !slot.isBooked &&
-                  !isSubmitting &&
-                  handleTimeSelect(slot.id)
+                  !slot.isBooked && !isSubmitting && handleTimeSelect(slot.id)
                 }
                 disabled={slot.isBooked || isSubmitting}
               >

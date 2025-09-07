@@ -117,7 +117,7 @@ async function main() {
 
     for (const doctor of doctors) {
       const utcDate = new Date(
-        Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+        Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
       );
       const schedule = await prisma.schedule.create({
         data: {

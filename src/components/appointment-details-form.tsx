@@ -18,7 +18,9 @@ import {
 import { TimeSlotSelection } from "./time-slot-selection";
 
 interface AppointmentDetailsFormProps {
-  onNext: (data: AppointmentDetailsFormData & { slotId: string }) => void;
+  onNext: (
+    data: AppointmentDetailsFormData & { slotId: string; selectedDate: Date },
+  ) => void;
 }
 
 export function AppointmentDetailsForm({
@@ -41,12 +43,13 @@ export function AppointmentDetailsForm({
   const appointmentType = watch("appointmentType");
   const doctorId = watch("doctorId");
 
-  const onSubmit = (slotId: string) => {
+  const onSubmit = (slotId: string, selectedDate: Date) => {
     onNext({
       isExisting: isExisting as boolean,
       appointmentType: appointmentType as string,
       doctorId: doctorId as string,
       slotId,
+      selectedDate, // Pass selectedDate
     });
   };
 
@@ -177,7 +180,7 @@ export function AppointmentDetailsForm({
             onNext={onSubmit}
             onBack={() => {}}
             doctorId={doctorId}
-            selectedDate={new Date()}
+            initialDate={new Date()}
             isValid={isValid}
           />
         )}

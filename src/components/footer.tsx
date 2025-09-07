@@ -9,25 +9,31 @@ export function Footer() {
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <Info className="w-5 h-5 text-purple-600" />
-              <h3 className="font-semibold text-gray-900">About The Dental Care Centre</h3>
+              <h3 className="font-semibold text-gray-900">
+                About The Dental Care Centre
+              </h3>
             </div>
-            
+
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Phone className="w-4 h-4 text-purple-600" />
                 <span className="text-gray-700">0207 639 3323</span>
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 <Mail className="w-4 h-4 text-purple-600" />
-                <span className="text-gray-700">enquiries@dentalcarecentreuk.co.uk</span>
+                <span className="text-gray-700">
+                  enquiries@dentalcarecentreuk.co.uk
+                </span>
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 <Globe className="w-4 h-4 text-purple-600" />
-                <span className="text-gray-700">The Dental Care Centre Website</span>
+                <span className="text-gray-700">
+                  The Dental Care Centre Website
+                </span>
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 <MapPin className="w-4 h-4 text-purple-600" />
                 <div className="text-gray-700">
@@ -68,5 +74,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }

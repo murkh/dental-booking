@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     if (!doctorId || !date) {
       return NextResponse.json(
         { error: "Doctor ID and date are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -19,8 +19,8 @@ export async function GET(request: NextRequest) {
       Date.UTC(
         date_form.getUTCFullYear(),
         date_form.getUTCMonth(),
-        date_form.getUTCDate()
-      )
+        date_form.getUTCDate(),
+      ),
     );
 
     const schedule = await prisma.schedule.findFirst({
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching time slots:", error);
     return NextResponse.json(
       { error: "Failed to fetch time slots" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -15,7 +15,7 @@ interface AppointmentType {
   price: number | null;
 }
 
-interface TimeSlot {
+export interface TimeSlot {
   id: string;
   startTime: string;
   endTime: string;

@@ -18,15 +18,22 @@ import {
   type PersonalDetailsFormData,
 } from "@/lib/validations";
 
+import type { AppointmentDetailsFormData } from "@/lib/validations";
+
 interface PersonalDetailsFormProps {
   onNext: (data: PersonalDetailsFormData) => void;
   onBack: () => void;
   isSubmitting?: boolean;
+  appointmentData?:
+    | (AppointmentDetailsFormData & { selectedDate: Date })
+    | null;
 }
 
 export function PersonalDetailsForm({
   onNext,
+  onBack,
   isSubmitting = false,
+  appointmentData,
 }: PersonalDetailsFormProps) {
   const {
     register,
@@ -39,6 +46,9 @@ export function PersonalDetailsForm({
     mode: "onChange",
   });
 
+  // Compute cost and summary
+  const isExisting = appointmentData?.isExisting;
+  const cost = isExisting ? 70 : 100;
   const watchedFields = watch();
 
   // Auto-progress when all required fields are filled
@@ -79,6 +89,12 @@ export function PersonalDetailsForm({
       onSubmit={handleSubmit(onSubmit)}
       className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 p-4 lg:p-8"
     >
+      {/* Appointment Summary and Cost */}
+      <div className="mb-6">
+        <div className="text-lg font-bold text-purple-700">
+          Appointment Cost: ${cost}
+        </div>
+      </div>
       <div className="space-y-6">
         {/* Name Fields */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -119,7 +135,6 @@ export function PersonalDetailsForm({
             )}
           </div>
         </div>
-
         {/* Email */}
         <div>
           <label
@@ -138,7 +153,6 @@ export function PersonalDetailsForm({
             <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
           )}
         </div>
-
         {/* Sex */}
         <div>
           <label
@@ -164,7 +178,6 @@ export function PersonalDetailsForm({
             <p className="text-red-500 text-sm mt-1">{errors.sex.message}</p>
           )}
         </div>
-
         {/* Date of Birth */}
         <div>
           <label
@@ -184,7 +197,6 @@ export function PersonalDetailsForm({
             </p>
           )}
         </div>
-
         {/* Phone Number */}
         <div>
           <label
@@ -216,7 +228,6 @@ export function PersonalDetailsForm({
             <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
           )}
         </div>
-
         {/* Medical Information */}
         <div>
           <label
@@ -232,7 +243,6 @@ export function PersonalDetailsForm({
             rows={4}
           />
         </div>
-
         {/* Terms and Marketing */}
         <div className="space-y-4">
           <div className="flex items-start space-x-3">
@@ -257,7 +267,6 @@ export function PersonalDetailsForm({
               {errors.termsAccepted.message}
             </p>
           )}
-
           <div className="flex items-start space-x-3">
             <Checkbox
               id="marketing"
@@ -277,7 +286,6 @@ export function PersonalDetailsForm({
           </div>
         </div>
       </div>
-
       {/* Auto-progress indicator */}
       {watchedFields.firstName &&
         watchedFields.lastName &&

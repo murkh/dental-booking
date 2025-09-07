@@ -193,6 +193,7 @@ export default function Home() {
             onNext={handlePersonalDetailsNext}
             onBack={handleBack}
             isSubmitting={isSubmitting}
+            appointmentData={appointmentData}
           />
         );
       default:

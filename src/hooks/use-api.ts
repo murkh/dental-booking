@@ -39,33 +39,6 @@ export function useDoctors() {
         setDoctors(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
-        // Fallback to mock data if API fails
-        setDoctors([
-          {
-            id: "1",
-            firstName: "Sarah",
-            lastName: "Johnson",
-            specialties: ["General Dentistry", "Preventive Care"],
-          },
-          {
-            id: "2",
-            firstName: "Michael",
-            lastName: "Chen",
-            specialties: ["Orthodontics", "Cosmetic Dentistry"],
-          },
-          {
-            id: "3",
-            firstName: "Emily",
-            lastName: "Davis",
-            specialties: ["Oral Surgery", "Implantology"],
-          },
-          {
-            id: "4",
-            firstName: "James",
-            lastName: "Wilson",
-            specialties: ["Periodontics", "Gum Treatment"],
-          },
-        ]);
       } finally {
         setLoading(false);
       }
@@ -79,7 +52,7 @@ export function useDoctors() {
 
 export function useAppointmentTypes() {
   const [appointmentTypes, setAppointmentTypes] = useState<AppointmentType[]>(
-    [],
+    []
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -160,7 +133,7 @@ export function useTimeSlots(doctorId: string, date: Date) {
           `/api/time-slots?doctorId=${doctorId}&date=${dateString}`,
           {
             signal: abortControllerRef.current.signal,
-          },
+          }
         );
         if (!response.ok) {
           throw new Error("Failed to fetch time slots");

@@ -51,35 +51,6 @@ export function PersonalDetailsForm({
   const cost = isExisting ? 70 : 100;
   const watchedFields = watch();
 
-  // Auto-progress when all required fields are filled
-  useEffect(() => {
-    const {
-      firstName,
-      lastName,
-      email,
-      sex,
-      dateOfBirth,
-      phone,
-      termsAccepted,
-    } = watchedFields;
-
-    if (
-      firstName &&
-      lastName &&
-      email &&
-      sex &&
-      dateOfBirth &&
-      phone &&
-      termsAccepted
-    ) {
-      const timer = setTimeout(() => {
-        onNext(watchedFields as PersonalDetailsFormData);
-      }, 500); // Small delay for better UX
-
-      return () => clearTimeout(timer);
-    }
-  }, [watchedFields, onNext]);
-
   const onSubmit = (data: PersonalDetailsFormData) => {
     onNext(data);
   };
@@ -286,25 +257,27 @@ export function PersonalDetailsForm({
           </div>
         </div>
       </div>
-      {/* Auto-progress indicator */}
-      {watchedFields.firstName &&
-        watchedFields.lastName &&
-        watchedFields.email &&
-        watchedFields.sex &&
-        watchedFields.dateOfBirth &&
-        watchedFields.phone &&
-        watchedFields.termsAccepted && (
-          <div className="mt-8 flex justify-center">
-            <div className="flex items-center space-x-2 text-purple-600">
-              <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm font-medium">
-                {isSubmitting
-                  ? "Booking your appointment..."
-                  : "Proceeding to book appointment..."}
-              </span>
-            </div>
-          </div>
-        )}
+
+      {/* Action Buttons */}
+      <div className="mt-8 flex justify-end space-x-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+        >
+          Back
+        </button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-purple-300 flex items-center"
+        >
+          {isSubmitting && (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+          )}
+          {isSubmitting ? "Booking..." : "Confirm Booking"}
+        </button>
+      </div>
     </form>
   );
 }

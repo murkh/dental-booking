@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useEffect } from "react";
 import { AppointmentDetailsForm } from "@/components/appointment-details-form";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
@@ -11,6 +10,7 @@ import type {
   AppointmentDetailsFormData,
   PersonalDetailsFormData,
 } from "@/lib/validations";
+import { BookingStatusModal } from "@/components/booking-status-modal";
 
 export default function Home() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -21,8 +21,11 @@ export default function Home() {
     useState<PersonalDetailsFormData | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [bookingSuccess, setBookingSuccess] = useState(false);
-  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    isSuccess: false,
+    message: "",
+  });
 
   const handleAppointmentDetailsNext = (
     data: AppointmentDetailsFormData & { slotId: string; selectedDate: Date }
@@ -39,11 +42,11 @@ export default function Home() {
 
   const handlePersonalDetailsNext = (data: PersonalDetailsFormData) => {
     setPersonalData(data);
+    handleBooking(data); // Trigger booking when personal details are submitted
   };
 
-  const handleBooking = async () => {
+  const handleBooking = async (personalData: PersonalDetailsFormData) => {
     setIsSubmitting(true);
-    setBookingError(null);
 
     try {
       if (!appointmentData || !personalData || !selectedSlotId) {
@@ -71,119 +74,50 @@ export default function Home() {
       };
 
       await createAppointment(bookingData);
-      setBookingSuccess(true);
+      setModalState({
+        isOpen: true,
+        isSuccess: true,
+        message:
+          "Your appointment has been confirmed. You will receive a confirmation email shortly.",
+      });
     } catch (error) {
       console.error("Booking error:", error);
-      setBookingError(
-        error instanceof Error ? error.message : "Failed to book appointment"
-      );
+      setModalState({
+        isOpen: true,
+        isSuccess: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to book appointment",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Only trigger booking when all required data is set and currentStep is 2
-  useEffect(() => {
-    if (
-      currentStep === 2 &&
-      appointmentData &&
-      personalData &&
-      selectedSlotId &&
-      !isSubmitting &&
-      !bookingSuccess &&
-      !bookingError
-    ) {
-      handleBooking();
-    }
-  }, [appointmentData, personalData, selectedSlotId, currentStep]);
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
   };
 
+  const closeModalAndReset = () => {
+    setModalState({ isOpen: false, isSuccess: false, message: "" });
+    if (modalState.isSuccess) {
+      // Reset all state to start over
+      setCurrentStep(1);
+      setAppointmentData(null);
+      setPersonalData(null);
+      setSelectedSlotId("");
+      setIsSubmitting(false);
+    } else {
+      // If booking failed, just close the modal
+      // The user can then retry submitting the form
+      setIsSubmitting(false);
+    }
+  };
+
   const renderCurrentStep = () => {
-    if (bookingSuccess) {
-      return (
-        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <title>Success</title>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Appointment Booked Successfully!
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Your appointment has been confirmed. You will receive a confirmation
-            email shortly.
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              setCurrentStep(1);
-              setAppointmentData(null);
-              setPersonalData(null);
-              setSelectedSlotId("");
-              setBookingSuccess(false);
-              setBookingError(null);
-            }}
-            className="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 transition-colors"
-          >
-            Book Another Appointment
-          </button>
-        </div>
-      );
-    }
-
-    if (bookingError) {
-      return (
-        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm border border-red-200 p-8 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <title>Error</title>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Booking Failed
-          </h2>
-          <p className="text-gray-600 mb-6">{bookingError}</p>
-          <button
-            type="button"
-            onClick={() => {
-              setBookingError(null);
-              setCurrentStep(1);
-            }}
-            className="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
-      );
-    }
-
     switch (currentStep) {
       case 1:
         return <AppointmentDetailsForm onNext={handleAppointmentDetailsNext} />;
@@ -208,6 +142,13 @@ export default function Home() {
       <main className="py-12">{renderCurrentStep()}</main>
 
       <Footer />
+
+      <BookingStatusModal
+        isOpen={modalState.isOpen}
+        isSuccess={modalState.isSuccess}
+        message={modalState.message}
+        onClose={closeModalAndReset}
+      />
     </div>
   );
 }

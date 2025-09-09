@@ -51,7 +51,7 @@ export function TimeSlotSelection({
               type="date"
               value={selectedDate.toISOString().split("T")[0]}
               onChange={handleDateChange}
-              className="w-full max-w-xs mx-auto"
+              className="w-auto max-w-xs mx-auto"
             />
           </div>
           <p className="text-gray-600">

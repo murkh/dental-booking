@@ -111,7 +111,7 @@ export function AppointmentDetailsForm({
                 placeholder={typesLoading ? "Loading..." : "Select reason..."}
               />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white">
               {appointmentTypes.map((type) => (
                 <SelectItem key={type.id} value={type.id}>
                   <div>
@@ -152,7 +152,7 @@ export function AppointmentDetailsForm({
                 }
               />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white">
               {doctors.map((doctor) => (
                 <SelectItem key={doctor.id} value={doctor.id}>
                   <div>
